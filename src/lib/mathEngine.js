@@ -11,37 +11,42 @@ export function validateAnswer(userAnswer, correctAnswer, tolerance = 0.001) {
     let cleanUser = userAnswer.toLowerCase().replace(/\s/g, '');
     let cleanCorrect = correctAnswer.toLowerCase().replace(/\s/g, '');
 
-    // Stripping constants if isolated
+    // Stripping constants
     cleanUser = cleanUser.replace(/\+c$/, '');
     cleanCorrect = cleanCorrect.replace(/\+c$/, '');
+
+    // Ensure logarithmic functions are mapped properly
+    cleanUser = cleanUser.replace(/ln/g, 'log');
+    cleanCorrect = cleanCorrect.replace(/ln/g, 'log');
 
     // Fast string match check
     if (cleanUser === cleanCorrect) {
       return { isCorrect: true, isExact: true };
     }
 
-    // 2. Exact Mathematical Symbolic Equivalence through Native EQ
+    // 2. Exact Mathematical Symbolic Equivalence
+    // By simulating (A - B), a mathematically equivalent statement will resolve exactly to 0
     try {
-      const isSymbolicMatch = nerdamer(cleanUser).eq(cleanCorrect);
-      if (isSymbolicMatch) {
+      const expr = nerdamer(`simplify((${cleanUser}) - (${cleanCorrect}))`);
+      if (expr.text() === '0' || expr.evaluate().text() === '0') {
         return { isCorrect: true, isExact: true };
       }
     } catch (e) {
       // Ignored: Nerdamer parsing fault (e.g. invalid syntax for symbolic mode)
     }
 
-    // 3. Fallback Numerical Evaluator (Crucial for constants like ln(e) vs 1, or 0.5 vs 1/2)
+    // 3. Fallback Numerical Evaluator
     try {
       const userNum = Number(nerdamer(cleanUser).evaluate().text());
       const correctNum = Number(nerdamer(cleanCorrect).evaluate().text());
 
       if (!isNaN(userNum) && !isNaN(correctNum)) {
         if (Math.abs(userNum - correctNum) <= tolerance) {
-          return { isCorrect: true, isExact: false }; // Semantically correct
+          return { isCorrect: true, isExact: false }; 
         }
       }
     } catch (e) {
-      // Ignored: Cannot be evaluated numerically
+      // Ignored
     }
 
     return { isCorrect: false, isExact: false };

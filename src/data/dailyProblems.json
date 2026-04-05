@@ -1,0 +1,57 @@
+[
+  {
+    "id": "gen_yku7ee_0",
+    "latex_problem": "\\int (10x^2 + 5) \\, dx",
+    "correct_answer": "10/3*x^3 + 5*x",
+    "difficulty": "Easy",
+    "xp_reward": 20,
+    "hint_1": "Integrate each term separately.",
+    "hint_2": "Use the power rule on x^2, and remember the integral of a constant is that constant times x.",
+    "hint_3": "First term becomes (10/3)*x^3.",
+    "solution": "Split the integral: $\\int 10x^2 dx + \\int 5 dx = \\frac{10}{3}x^3 + 5x + C$."
+  },
+  {
+    "id": "gen_m2pz5_1",
+    "latex_problem": "\\int \\frac{2}{x} \\, dx",
+    "correct_answer": "2*ln(x)",
+    "difficulty": "Beginner",
+    "xp_reward": 10,
+    "hint_1": "What has a derivative of 1/x?",
+    "hint_2": "It involves the natural logarithm.",
+    "hint_3": "ln(x)",
+    "solution": "The integral of $\\frac{1}{x}$ is $\\ln|x|$. Multiplying by the constant gives $2\\ln|x| + C$."
+  },
+  {
+    "id": "gen_alm23w_2",
+    "latex_problem": "\\int \\frac{5}{x} \\, dx",
+    "correct_answer": "5*ln(x)",
+    "difficulty": "Beginner",
+    "xp_reward": 10,
+    "hint_1": "What has a derivative of 1/x?",
+    "hint_2": "It involves the natural logarithm.",
+    "hint_3": "ln(x)",
+    "solution": "The integral of $\\frac{1}{x}$ is $\\ln|x|$. Multiplying by the constant gives $5\\ln|x| + C$."
+  },
+  {
+    "id": "gen_ntmff_3",
+    "latex_problem": "\\int 3\\sin(4x) \\, dx",
+    "correct_answer": "-(3/4)*cos(4*x)",
+    "difficulty": "Medium",
+    "xp_reward": 50,
+    "hint_1": "The integral of sin(kx) is -(1/k)cos(kx).",
+    "hint_2": "Don't forget the negative sign!",
+    "hint_3": "Divide by 4.",
+    "solution": "Use u-substitution: $u = 4x$, $du = 4dx$. $\\int \\sin(u) \\frac{du}{4} = -\\frac{1}{4}\\cos(u)$. Final answer: $-\\frac{3}{4}\\cos(4x) + C$."
+  },
+  {
+    "id": "gen_7srupu_4",
+    "latex_problem": "\\int 6x^2 \\, dx",
+    "correct_answer": "6/3*x^(3)",
+    "difficulty": "Beginner",
+    "xp_reward": 10,
+    "hint_1": "Use the power rule.",
+    "hint_2": "Add 1 to the exponent 2.",
+    "hint_3": "Divide by 3.",
+    "solution": "Apply the power rule: $\\int x^n \\, dx = \\frac{x^{n+1}}{n+1}$. Result is $\\frac{6}{3}x^{3} + C$."
+  }
+]

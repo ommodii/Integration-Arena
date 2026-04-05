@@ -6,6 +6,8 @@ import IntegralDisplay from '@/components/IntegralDisplay';
 import { validateAnswer } from '@/lib/mathEngine';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
+import MathRenderer from '@/components/MathRenderer';
+import fallbackDailyData from '@/data/dailyProblems.json';
 
 export default function Play() {
   const { user } = useAuth();
@@ -25,10 +27,7 @@ export default function Play() {
       if (data && data.length > 0) {
         setProblems(data);
       } else {
-        setProblems([
-          { id: 'mock1', latex_problem: '\\int x^2 \\, dx', correct_answer: 'x^3/3', difficulty: 'Easy', xp_reward: 50, hint_1: 'Power rule.', hint_2: 'Divide by n+1.', hint_3: 'x^3 / 3', solution: 'The integral is x^3/3 + C.' },
-          { id: 'mock2', latex_problem: '\\int e^x \\, dx', correct_answer: 'e^x', difficulty: 'Beginner', xp_reward: 20, hint_1: 'The derivative of e^x is e^x.', hint_2: 'Same as its derivative.', hint_3: 'Just e^x.', solution: 'The integral is simply e^x + C.' }
-        ]);
+        setProblems(fallbackDailyData);
       }
       setLoading(false);
     }
@@ -76,10 +75,8 @@ export default function Play() {
       }
 
       const key = e.key;
-      // Allow variables, operations, and e
-      const validChars = /^[0-9x+\-*/^().e]$/;
-      
-      if (validChars.test(key)) {
+      // Allow any single character stroke without blocking control keys
+      if (key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
         setInputAnswer(prev => prev + key);
       } else if (key === 'Backspace') {
         setInputAnswer(prev => prev.slice(0, -1));
@@ -160,7 +157,7 @@ export default function Play() {
           <p style={{ fontWeight: 700, marginBottom: '1rem' }}>+{problem.xp_reward} XP Gained</p>
           <div style={{ background: 'var(--bg-color)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
             <h4 style={{ marginBottom: '0.5rem' }}>Solution Explanation</h4>
-            <p style={{ lineHeight: '1.6' }}>{problem.solution}</p>
+            <div style={{ lineHeight: '1.6' }}><MathRenderer text={problem.solution} /></div>
           </div>
           <button onClick={handleNext} className="btn btn-primary" style={{ width: '100%', marginTop: '1.5rem', padding: '16px', fontSize: '1.2rem' }}>
             {currentIndex < problems.length - 1 ? 'Next Problem' : 'Finish Challenge'}

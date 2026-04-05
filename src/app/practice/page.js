@@ -5,6 +5,8 @@ import MathKeypad from '@/components/MathKeypad';
 import IntegralDisplay from '@/components/IntegralDisplay';
 import { validateAnswer } from '@/lib/mathEngine';
 import { supabase } from '@/lib/supabase';
+import MathRenderer from '@/components/MathRenderer';
+import fallbackPracticeData from '@/data/practiceProblems.json';
 
 export default function Practice() {
   const [problems, setProblems] = useState([]);
@@ -16,15 +18,12 @@ export default function Practice() {
 
   useEffect(() => {
     async function loadPracticeProblems() {
-      // In practice mode we fetch up to 50 problems and shuffle
       const { data } = await supabase.from('problems').select('*').limit(50);
       
       if (data && data.length > 0) {
         setProblems(data.sort(() => Math.random() - 0.5));
       } else {
-        setProblems([
-          { id: 'mock1', latex_problem: '\\int \\sin(x) \\, dx', correct_answer: '-cos(x)', difficulty: 'Medium', hint_1: 'Derivative of cos is -sin', hint_2: 'Reverse the derivative', hint_3: 'Add negative sign', solution: 'The integral is -cos(x) + C.' }
-        ]);
+        setProblems(fallbackPracticeData.sort(() => Math.random() - 0.5));
       }
       setLoading(false);
     }
@@ -62,9 +61,7 @@ export default function Practice() {
       }
 
       const key = e.key;
-      const validChars = /^[0-9x+\-*/^().e]$/;
-      
-      if (validChars.test(key)) {
+      if (key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
         setInputAnswer(prev => prev + key);
       } else if (key === 'Backspace') {
         setInputAnswer(prev => prev.slice(0, -1));
@@ -133,7 +130,7 @@ export default function Practice() {
           <p style={{ fontWeight: 700, marginBottom: '1rem', color: 'var(--text-secondary)' }}>Practice solves grant no XP.</p>
           <div style={{ background: 'var(--bg-color)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
             <h4 style={{ marginBottom: '0.5rem' }}>Solution Explanation</h4>
-            <p style={{ lineHeight: '1.6' }}>{problem.solution || 'No explanation available.'}</p>
+            <div style={{ lineHeight: '1.6' }}><MathRenderer text={problem.solution || 'No explanation available.'} /></div>
           </div>
           <button onClick={handleNext} className="btn btn-primary" style={{ width: '100%', marginTop: '1.5rem', padding: '16px', fontSize: '1.2rem' }}>
             Next Practice Problem
