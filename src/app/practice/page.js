@@ -5,34 +5,30 @@ import MathKeypad from '@/components/MathKeypad';
 import IntegralDisplay from '@/components/IntegralDisplay';
 import { validateAnswer } from '@/lib/mathEngine';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/components/AuthProvider';
 
-export default function Play() {
-  const { user } = useAuth();
+export default function Practice() {
   const [problems, setProblems] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [inputAnswer, setInputAnswer] = useState('');
   const [loading, setLoading] = useState(true);
-  const [feedback, setFeedback] = useState(null); // null, 'correct', 'incorrect'
+  const [feedback, setFeedback] = useState(null); 
   const [showHint, setShowHint] = useState(0); 
-  const [score, setScore] = useState(0);
 
   useEffect(() => {
-    async function loadDailyProblems() {
-      // Fetch 5 problems
-      const { data } = await supabase.from('problems').select('*').limit(5); 
+    async function loadPracticeProblems() {
+      // In practice mode we fetch up to 50 problems and shuffle
+      const { data } = await supabase.from('problems').select('*').limit(50);
       
       if (data && data.length > 0) {
-        setProblems(data);
+        setProblems(data.sort(() => Math.random() - 0.5));
       } else {
         setProblems([
-          { id: 'mock1', latex_problem: '\\int x^2 \\, dx', correct_answer: 'x^3/3', difficulty: 'Easy', xp_reward: 50, hint_1: 'Power rule.', hint_2: 'Divide by n+1.', hint_3: 'x^3 / 3', solution: 'The integral is x^3/3 + C.' },
-          { id: 'mock2', latex_problem: '\\int e^x \\, dx', correct_answer: 'e^x', difficulty: 'Beginner', xp_reward: 20, hint_1: 'The derivative of e^x is e^x.', hint_2: 'Same as its derivative.', hint_3: 'Just e^x.', solution: 'The integral is simply e^x + C.' }
+          { id: 'mock1', latex_problem: '\\int \\sin(x) \\, dx', correct_answer: '-cos(x)', difficulty: 'Medium', hint_1: 'Derivative of cos is -sin', hint_2: 'Reverse the derivative', hint_3: 'Add negative sign', solution: 'The integral is -cos(x) + C.' }
         ]);
       }
       setLoading(false);
     }
-    loadDailyProblems();
+    loadPracticeProblems();
   }, []);
 
   const handleKeypadInput = (val) => {
@@ -51,14 +47,7 @@ export default function Play() {
     
     if (isCorrect) {
       setFeedback('correct');
-      setScore(s => s + problem.xp_reward);
-
-      if (user) {
-        const { data: profile } = await supabase.from('user_profiles').select('xp').eq('id', user.id).single();
-        if (profile) {
-          await supabase.from('user_profiles').update({ xp: profile.xp + problem.xp_reward }).eq('id', user.id);
-        }
-      }
+      // No XP modification for practice!
     } else {
       setFeedback('incorrect');
       setTimeout(() => setFeedback(null), 3000);
@@ -66,38 +55,26 @@ export default function Play() {
   };
 
   const handleNext = () => {
-    if (currentIndex < problems.length - 1) {
-      setCurrentIndex(c => c + 1);
-      setInputAnswer('');
-      setFeedback(null);
-      setShowHint(0);
-    } else {
-      setFeedback('complete');
-    }
+    setCurrentIndex(c => c + 1);
+    setInputAnswer('');
+    setFeedback(null);
+    setShowHint(0);
   };
 
-  if (loading) return <div className="container" style={{ textAlign: 'center', marginTop: '4rem' }}>Loading daily challenge...</div>;
-  if (!problems.length) return <div className="container">No problems found for today!</div>;
-
-  if (feedback === 'complete') {
-    return (
-      <section className="card" style={{ textAlign: 'center', marginTop: '2rem' }}>
-        <h2 style={{ color: 'var(--accent-primary)', fontSize: '2.5rem', marginBottom: '1rem' }}>Challenge Complete!</h2>
-        <p style={{ fontSize: '1.2rem', marginBottom: '2rem' }}>You earned {score} XP today!</p>
-        <button className="btn btn-primary" onClick={() => window.location.href = '/dashboard'}>
-          Return to Dashboard
-        </button>
-      </section>
-    );
-  }
+  if (loading) return <div className="container" style={{ textAlign: 'center', marginTop: '4rem' }}>Gathering unlimited practice challenges...</div>;
+  if (!problems.length || currentIndex >= problems.length) return (
+    <div className="container" style={{ textAlign: 'center', marginTop: '4rem' }}>
+      <h2>You solved all available problems!</h2>
+      <button onClick={() => window.location.reload()} className="btn btn-primary" style={{marginTop:'1rem'}}>Reload Practice Mode</button>
+    </div>
+  );
 
   const problem = problems[currentIndex];
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', paddingBottom: '4rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-        <div style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Problem {currentIndex + 1} / {problems.length}</div>
-        <div style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>XP Earned: {score}</div>
+        <div style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Practice Mode — Infinite Queue</div>
       </div>
       
       <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
@@ -123,25 +100,25 @@ export default function Play() {
       
       {feedback === 'incorrect' && (
         <div style={{ color: 'var(--accent-danger)', fontWeight: 700, textAlign: 'center', margin: '1rem 0', fontSize: '1.2rem' }}>
-          Incorrect formulation. Look closely and try again!
+          Not quite right. Give it another thought!
         </div>
       )}
 
       {feedback === 'correct' ? (
         <div className="card" style={{ marginTop: '2rem', textAlign: 'left', borderColor: 'var(--accent-primary)', backgroundColor: 'rgba(88, 204, 2, 0.1)' }}>
-          <h3 style={{ color: 'var(--accent-primary)', marginBottom: '0.5rem', fontSize: '1.5rem' }}>Splendid!</h3>
-          <p style={{ fontWeight: 700, marginBottom: '1rem' }}>+{problem.xp_reward} XP Gained</p>
+          <h3 style={{ color: 'var(--accent-primary)', marginBottom: '0.5rem', fontSize: '1.5rem' }}>Nailed it!</h3>
+          <p style={{ fontWeight: 700, marginBottom: '1rem', color: 'var(--text-secondary)' }}>Practice solves grant no XP.</p>
           <div style={{ background: 'var(--bg-color)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
             <h4 style={{ marginBottom: '0.5rem' }}>Solution Explanation</h4>
-            <p style={{ lineHeight: '1.6' }}>{problem.solution}</p>
+            <p style={{ lineHeight: '1.6' }}>{problem.solution || 'No explanation available.'}</p>
           </div>
           <button onClick={handleNext} className="btn btn-primary" style={{ width: '100%', marginTop: '1.5rem', padding: '16px', fontSize: '1.2rem' }}>
-            {currentIndex < problems.length - 1 ? 'Next Problem' : 'Finish Challenge'}
+            Next Practice Problem
           </button>
         </div>
       ) : (
         <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-          <button onClick={() => setShowHint(h => Math.min(h + 1, 3))} className="btn btn-secondary" style={{ flex: 1 }} disabled={showHint >= 3}>
+          <button onClick={() => setShowHint(Math.min(showHint + 1, 3))} className="btn btn-secondary" style={{ flex: 1 }} disabled={showHint >= 3}>
             Hint ({3 - showHint} left)
           </button>
           <button onClick={handleSubmit} className="btn btn-primary" style={{ flex: 2 }}>
@@ -153,9 +130,9 @@ export default function Play() {
       {showHint > 0 && feedback !== 'correct' && (
         <div className="card" style={{ marginTop: '2rem', textAlign: 'left' }}>
           <h4 style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>Hints</h4>
-          {showHint >= 1 && <p style={{ marginBottom: '0.5rem' }}><strong>1.</strong> {problem.hint_1}</p>}
-          {showHint >= 2 && <p style={{ marginBottom: '0.5rem' }}><strong>2.</strong> {problem.hint_2}</p>}
-          {showHint >= 3 && <p><strong>3.</strong> {problem.hint_3}</p>}
+          {showHint >= 1 && <p style={{ marginBottom: '0.5rem' }}><strong>1.</strong> {problem.hint_1 || "Unavailable"}</p>}
+          {showHint >= 2 && <p style={{ marginBottom: '0.5rem' }}><strong>2.</strong> {problem.hint_2 || "Unavailable"}</p>}
+          {showHint >= 3 && <p><strong>3.</strong> {problem.hint_3 || "Unavailable"}</p>}
         </div>
       )}
     </div>

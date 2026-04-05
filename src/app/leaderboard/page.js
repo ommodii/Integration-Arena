@@ -1,16 +1,39 @@
 "use client";
 
 import { Trophy } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export default function Leaderboard() {
-  const users = [
-    { rank: 1, name: "EulerGhost", xp: 12500, streak: 45 },
-    { rank: 2, name: "GaussJr", xp: 11200, streak: 40 },
-    { rank: 3, name: "IntegrationBee99", xp: 10500, streak: 38 },
-    { rank: 4, name: "CalcSlayer", xp: 9800, streak: 20 },
-    { rank: 5, name: "MathMagician", xp: 8600, streak: 12 },
-    // You'd query `users` sorted by `xp` descending in your backend via Supabase
-  ];
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchLeaderboard() {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .order('xp', { ascending: false })
+        .limit(50);
+      
+      if (data && data.length > 0) {
+        setUsers(data.map((u, i) => ({ rank: i + 1, name: u.full_name || 'Anonymous User', xp: u.xp, streak: u.streak })));
+      } else {
+        // Fallback for an unseeded DB
+        setUsers([
+          { rank: 1, name: "EulerGhost", xp: 12500, streak: 45 },
+          { rank: 2, name: "GaussJr", xp: 11200, streak: 40 },
+          { rank: 3, name: "IntegrationBee99", xp: 10500, streak: 38 },
+          { rank: 4, name: "CalcSlayer", xp: 9800, streak: 20 },
+          { rank: 5, name: "MathMagician", xp: 8600, streak: 12 },
+        ]);
+      }
+      setLoading(false);
+    }
+    fetchLeaderboard();
+  }, []);
+
+  if (loading) return <div className="container" style={{textAlign: 'center', marginTop: '4rem'}}>Loading...</div>;
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', paddingBottom: '4rem' }}>
