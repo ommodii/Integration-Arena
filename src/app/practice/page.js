@@ -54,6 +54,29 @@ export default function Practice() {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (feedback === 'correct') {
+        if (e.key === 'Enter') handleNext();
+        return;
+      }
+
+      const key = e.key;
+      const validChars = /^[0-9x+\-*/^().e]$/;
+      
+      if (validChars.test(key)) {
+        setInputAnswer(prev => prev + key);
+      } else if (key === 'Backspace') {
+        setInputAnswer(prev => prev.slice(0, -1));
+      } else if (key === 'Enter') {
+        handleSubmit();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [feedback, inputAnswer, currentIndex, problems]);
+
   const handleNext = () => {
     setCurrentIndex(c => c + 1);
     setInputAnswer('');

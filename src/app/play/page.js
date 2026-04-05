@@ -65,6 +65,33 @@ export default function Play() {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Don't capture inputs if game is over or solved
+      if (feedback === 'correct' || feedback === 'complete') {
+        if (e.key === 'Enter' && feedback === 'correct') {
+          handleNext();
+        }
+        return;
+      }
+
+      const key = e.key;
+      // Allow variables, operations, and e
+      const validChars = /^[0-9x+\-*/^().e]$/;
+      
+      if (validChars.test(key)) {
+        setInputAnswer(prev => prev + key);
+      } else if (key === 'Backspace') {
+        setInputAnswer(prev => prev.slice(0, -1));
+      } else if (key === 'Enter') {
+        handleSubmit();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [feedback, inputAnswer, currentIndex, problems]);
+
   const handleNext = () => {
     if (currentIndex < problems.length - 1) {
       setCurrentIndex(c => c + 1);
